@@ -1,5 +1,6 @@
-from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.contrib import messages
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, get_object_or_404, redirect
 from .forms import PostForm
 from .models import Post
 
@@ -9,10 +10,37 @@ def posts_create(request):
     if form.is_valid():
         instance = form.save(commit=False)
         instance.save()
+        messages.success(request, "success")
+        return HttpResponseRedirect(instance.get_absolute_url())
+    else:
+        messages.error(request, "Not success")
     context = {
             "form": form,
     }
     return render(request, "post_form.html", context)
+
+
+def posts_update(request, id=None):
+    instance = get_object_or_404(Post, id=id)
+    form = PostForm(request.POST or None, instance=instance)
+    if form.is_valid():
+        instance = form.save(commit=False)
+        instance.save()
+        messages.success(request, "<a href='#'>Item </a> Saved", extra_tags='html_safe')
+        return HttpResponseRedirect(instance.get_absolute_url())
+    context = {
+        "title": instance.title,
+        "instance": instance,
+        "form": form,
+    }
+    return render(request, "post_form.html", context)
+
+
+def posts_delete(request, id=None):
+    instance = get_object_or_404(Post, id=id)
+    instance.delete()
+    messages.success(request, "successfully deleted")
+    return redirect("posts:list")
 
 
 def posts_detail(request, id=None):
@@ -31,28 +59,9 @@ def posts_list(request):
             "title": "My user List"
     }
 
-    # if request.user.is_authenticated():
-    #     context = {
-    #         "title": "My user List"
-    #     }
-    # else:
-    #     context = {
-    #         "title": "List"
-    #     }
     return render(request, "index.html", context)
 
 
-def posts_update(request):
-    context = {
-        "title": "Update"
-    }
-    return render(request, "index.html", context)
 
-
-def posts_delete(request):
-    context = {
-        "title": "Delete"
-    }
-    return render(request, "index.html", context)
 
 
